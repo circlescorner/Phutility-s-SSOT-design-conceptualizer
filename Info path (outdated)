@@ -1,0 +1,737 @@
+Single Source of Truth (SSOT) Conversational System
+
+Version: v0.1 (conceptual lock)
+
+Status: Architecture frozen, implementation staged
+
+Principle: Compiled truth only. Conversation is not truth.
+
+  
+
+  
+
+  
+
+  
+
+0. CORE PHILOSOPHY (NON-NEGOTIABLE)
+
+  
+
+  
+
+1. Truth is COMPILED, not written.
+2. Conversation is UNTRUSTED by default.
+3. All assertions must trace back to evidence.
+4. Humans supply reality; models supply synthesis.
+5. Rollback must always be possible.
+6. No bot may silently promote information to SSOT.
+
+  
+
+  
+
+  
+
+  
+
+  
+
+7. SYSTEM OVERVIEW (HIGH LEVEL)
+
+  
+
+  
+
+The system consists of a single conversational front desk and a back-office truth pipeline, supported by orchestration, compute escalation, and governance bots.
+
+  
+
+Users (mechanics) interact with one chat interface.
+
+  
+
+Behind that interface:
+
+  
+
+- Information is classified, captured, evaluated, contradicted, cited, and compiled.
+- Fast answers are returned immediately when possible.
+- Deep reasoning is escalated only when justified.
+- SSOT outputs are published only after passing the pipeline.
+
+  
+
+  
+
+  
+
+  
+
+  
+
+2. BOT ROLES (STRICT SEPARATION OF POWERS)
+
+  
+
+  
+
+  
+
+2.1 FRONT DESK CHAT BOT (SINGLE CHAT INTERFACE)
+
+  
+
+  
+
+This is the only bot users talk to.
+
+  
+
+It has two output channels per response:
+
+  
+
+  
+
+A. Helpfulness Channel (Conversational)
+
+  
+
+  
+
+- Natural language conversation.
+- May explain, reason, advise, and hypothesize.
+- May only assert facts already present in SSOT.
+- All advice, predictions, or proposals must be clearly framed as such.
+- Must never claim something is “true” unless SSOT-backed.
+
+  
+
+  
+
+  
+
+B. Capture Channel (Unverified, Structured)
+
+  
+
+  
+
+- Automatically logs potentially useful information.
+- Preserves raw user language verbatim.
+- Assigns unique IDs.
+- Labels uncertainty explicitly.
+- Never decides truth.
+
+  
+
+  
+
+Users do not choose channels.
+
+They talk once; the system listens in two ways.
+
+  
+
+  
+
+  
+
+  
+
+2.2 CAPTURE / INTAKE CONTRACT
+
+  
+
+  
+
+Capture accepts:
+
+  
+
+- messy language
+- shorthand
+- contradictions
+- emotional or uncertain statements
+- “just noticed” observations
+
+  
+
+  
+
+Capture produces objects such as:
+
+  
+
+- CAP-<id> — raw captures
+- CAND-CLAIM-<id> — candidate claims (hypotheses)
+- Q-<id> — questions
+- TASK-<id> — follow-ups
+
+  
+
+  
+
+Rules:
+
+  
+
+- Capture may extract candidates.
+- Capture may NOT clean, correct, or promote.
+- Capture is allowed to be wrong.
+
+  
+
+  
+
+Capture is evidence of thinking, not truth.
+
+  
+
+  
+
+  
+
+  
+
+3. QUESTIONING BEHAVIOR (CRITICAL UX RULE)
+
+  
+
+  
+
+The system must be extremely selective when asking users clarifying questions.
+
+  
+
+  
+
+3.1 QUESTION VALUE GATING
+
+  
+
+  
+
+A question may only be asked if ALL of the following are true:
+
+  
+
+1. Human-observable now  
+    
+
+- The user can reasonably answer without investigation.
+
+3.   
+    
+4. Decision-changing  
+    
+
+- The answer would materially change the next step or hypothesis set.
+
+6.   
+    
+7. Low-effort  
+    
+
+- Binary, multiple-choice, or one-word answer.
+
+9.   
+    
+
+  
+
+  
+
+If any gate fails → DO NOT ASK.
+
+  
+
+  
+
+3.2 QUESTION BUDGET
+
+  
+
+  
+
+- Max 1–2 questions per interaction.
+- Max one round of follow-ups.
+- If uncertainty remains → escalate, do not interrogate.
+
+  
+
+  
+
+  
+
+3.3 “DON’T ASK — INFER” RULE
+
+  
+
+  
+
+If information can be inferred from:
+
+  
+
+- asset type
+- history
+- known failure modes
+- prior captures
+
+  
+
+  
+
+→ infer explicitly and label as inference.
+
+  
+
+  
+
+  
+
+  
+
+4. FRONT DESK DECISION LOGIC (EASY vs HARD)
+
+  
+
+  
+
+  
+
+4.1 EASY QUESTIONS (Answer Immediately)
+
+  
+
+  
+
+Examples:
+
+  
+
+- “Where is BLT545?”
+- “Who owns this pump?”
+- “What is this tag?”
+
+  
+
+  
+
+Criteria:
+
+  
+
+- Lookup or factual
+- High-confidence retrieval from SSOT/DB
+- No diagnostic reasoning required
+
+  
+
+  
+
+  
+
+4.2 HARD QUESTIONS (TROUBLESHOOTING / WHY)
+
+  
+
+  
+
+Examples:
+
+  
+
+- “Why is BLT545 making noise?”
+- “Is this safe to run?”
+- “What should we check next?”
+
+  
+
+  
+
+Process:
+
+  
+
+1. Ask only high-value clarifying questions (if any).
+2. Assemble a Case File.
+3. Escalate to larger model compute.
+
+  
+
+  
+
+  
+
+  
+
+  
+
+4. CASE FILE (ESCALATION PAYLOAD)
+
+  
+
+  
+
+Before escalation, the front desk assembles a structured bundle:
+
+  
+
+- Asset ID(s)
+- User-reported symptoms (verbatim + normalized)
+- Answers to clarifying questions
+- Retrieved history (captures, work orders, SSOT)
+- Constraints (safety, lockout rules, SSOT boundaries)
+- Unknowns
+- Requested output type
+
+  
+
+  
+
+This prevents waste and hallucination.
+
+  
+
+  
+
+  
+
+  
+
+6. ESCALATION COMPUTE STRATEGY
+
+  
+
+  
+
+  
+
+6.1 LIGHTWEIGHT FRONT MODEL (ALWAYS ON)
+
+  
+
+  
+
+- Fully self-hosted.
+- Fast.
+- Handles classification, retrieval, simple answers.
+- Does NOT do deep reasoning.
+
+  
+
+  
+
+  
+
+6.2 HEAVY MODEL (ON DEMAND)
+
+  
+
+  
+
+- Runs on burst GPU compute (e.g., RunPod).
+- Triggered only for hard cases.
+- Receives Case File, not raw chat.
+- Returns:  
+    
+
+- ranked hypotheses
+- rationale
+- what evidence reduced uncertainty
+- next checks
+- explicit uncertainty
+
+-   
+    
+
+  
+
+  
+
+Outputs are captured, not trusted.
+
+  
+
+  
+
+  
+
+  
+
+7. TRUTH BUILDER PIPELINE (BACK OFFICE)
+
+  
+
+  
+
+Runs asynchronously. Users do not wait.
+
+  
+
+  
+
+7.1 INGESTOR
+
+  
+
+  
+
+- Normalizes captures into DB schema.
+- Links sources.
+- Prepares claims for evaluation.
+
+  
+
+  
+
+  
+
+7.2 PARALLEL TRUTH BOTS (2–4)
+
+  
+
+  
+
+Each bot has a different lens:
+
+  
+
+- Conservative extractor
+- Cross-checker
+- Domain heuristic
+- Adversarial skeptic
+
+  
+
+  
+
+Each outputs:
+
+  
+
+- confidence score
+- rationale
+- evidence links
+- recommended status
+
+  
+
+  
+
+  
+
+7.3 CONTRADICTION HUNTER
+
+  
+
+  
+
+- Detects conflicts between claims and SSOT.
+- Produces conflict objects, not resolutions.
+
+  
+
+  
+
+  
+
+7.4 CITATION MAKER
+
+  
+
+  
+
+- Builds explicit citation chains.
+- Ensures every claim has a WHY.
+
+  
+
+  
+
+  
+
+7.5 COMPILER (SACRED)
+
+  
+
+  
+
+- The ONLY component allowed to produce SSOT.
+- Accepts only eligible claims.
+- Emits:  
+    
+
+- SSOT diffs
+- provenance logs
+- versioned outputs (HTML + Obsidian)
+
+-   
+    
+- Never guesses.
+- Never writes without citations.
+
+  
+
+  
+
+  
+
+  
+
+  
+
+8. SSOT OUTPUTS
+
+  
+
+  
+
+- Published HTML (public)
+- Obsidian vault (git-synced)
+- Version tags
+- Audit trail (“why this is true”)
+
+  
+
+  
+
+Rollback = git checkout <tag> + redeploy.
+
+  
+
+  
+
+  
+
+  
+
+9. GOVERNANCE BOTS (NON-TRUTH)
+
+  
+
+  
+
+  
+
+9.1 CODE MANAGER (EXECUTION)
+
+  
+
+  
+
+- Applies patches
+- Runs tests
+- Manages branches, PRs, tags
+- Deploys and rolls back
+- Never debates “should we”
+
+  
+
+  
+
+  
+
+9.2 HUMAN COACH (ALIGNMENT)
+
+  
+
+  
+
+- Evaluates direction vs goals
+- Calls out drift
+- Explains why changes are good/bad
+- Suggests next steps
+- Never pushes code directly
+
+  
+
+  
+
+  
+
+  
+
+  
+
+10. INFRASTRUCTURE MODEL (SUMMARY)
+
+  
+
+  
+
+- Control Plane: always-on, small  
+    
+
+- chat UI
+- queue
+- coach
+- orchestration
+
+-   
+    
+- Database: persistent (SQL + vectors)
+- Workers: ephemeral CPU droplets (burst)
+- GPU: on-demand escalation only
+- Baseline services protected
+- Everything reproducible and destroyable
+
+  
+
+  
+
+  
+
+  
+
+  
+
+11. FINAL RULES (MEMORIZE THESE)
+
+  
+
+  
+
+- Conversation ≠ truth.
+- Capture ≠ clean.
+- Models do not invent reality.
+- Humans are asked only reasonable questions.
+- If unsure, escalate — don’t interrogate.
+- If it can’t be rolled back, it can’t be trusted.
+
+  
+
+  
+
+  
+
+  
+
+  
+
+ONE-LINE SYSTEM SUMMARY
+
+  
+
+  
+
+Users talk naturally.
+
+The system captures everything, trusts nothing, evaluates rigorously, and only publishes what survives contradiction, citation, and compilation.
+
+  
+
+  
+
+  
+
+If you want next, I can:
+
+  
+
+- split this into system prompts per bot, or
+- derive a Week-by-Week MVP build plan, or
+- turn this into a formal SSOT Charter ready for stakeholders.
