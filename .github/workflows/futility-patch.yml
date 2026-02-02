@@ -12,6 +12,11 @@ on:
         required: false
         default: "doctrine"
         type: string
+      master_file:
+        description: "Canonical master file path"
+        required: false
+        default: "MASTER.md"
+        type: string
 
 permissions:
   contents: write
@@ -29,9 +34,14 @@ jobs:
         run: |
           set -e
           mkdir -p patches tools
-
-          [ -f MASTER.md ] || echo "# FUTILITY’S — CANONICAL MASTER" > MASTER.md
-          [ -f HISTORY.md ] || echo "# History" > HISTORY.md
+          if [ ! -f "${{ inputs.master_file }}" ]; then
+            echo "# FUTILITY’S — CANONICAL MASTER" > "${{ inputs.master_file }}"
+            echo "" >> "${{ inputs.master_file }}"
+          fi
+          if [ ! -f "HISTORY.md" ]; then
+            echo "# History" > HISTORY.md
+            echo "" >> HISTORY.md
+          fi
 
       - name: Install patch tool
         run: |
@@ -39,35 +49,83 @@ jobs:
           #!/usr/bin/env bash
           set -euo pipefail
 
-          title="$1"
+          PATCH_DIR="${PATCH_DIR:-patches}"
+          MASTER_FILE="${MASTER_FILE:-MASTER.md}"
+          HISTORY_FILE="${HISTORY_FILE:-HISTORY.md}"
+
+          title="${1:-}"
           scope="${2:-doctrine}"
 
-          slug="$(echo "$title" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g')"
+          if [[ -z "$title" ]]; then
+            echo "Missing title"
+            exit 2
+          fi
 
-          mkdir -p patches
+          # slugify
+          slug="$(echo "$title" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g')"
 
-          n=$(ls patches 2>/dev/null | grep -E '^[0-9]+' | wc -l | awk '{printf "%03d", $1+1}')
+          mkdir -p "$PATCH_DIR"
 
-          file="patches/${n}-${slug}.md"
-          date="$(date +%F)"
+          # Safe next number (works when directory is empty)
+          max=0
+          shopt -s nullglob
+          for f in "$PATCH_DIR"/[0-9][0-9][0-9]-*.md; do
+            base="${f##*/}"
+            num="${base%%-*}"
+            if [[ "$num" =~ ^[0-9]{3}$ ]]; then
+              ((10#$num > max)) && max=$((10#$num))
+            fi
+          done
+          shopt -u nullglob
 
-          cat > "$file" <<EOF
+          n=$(printf "%03d" $((max + 1)))
+          patch_path="$PATCH_DIR/${n}-${slug}.md"
+          date="$(date +%Y-%m-%d)"
+
+          cat > "$patch_path" <<EOF
           # Patch ${n} — ${title}
 
           Date: ${date}
           Scope: ${scope}
 
+          ## Context
+          (What triggered this change?)
+
           ## Change
-          (Describe change)
+          (What is changing?)
+
+          ## Affected Sections
+          - ${MASTER_FILE} §...
 
           ## Rationale
-          (Why)
+          (Why this is better.)
 
-          ## Rollback
-          (How)
+          ## Deprecates / Replaces
+          (What is now obsolete?)
+
+          ## Rollback Plan
+          (How to revert.)
+
           EOF
 
-          echo "$file" > .patch_file
+          # HISTORY entry
+          {
+            echo "## ${date} — Patch ${n}: ${title}"
+            echo ""
+            echo "- Patch file: \`${patch_path}\`"
+            echo "- Scope: ${scope}"
+            echo ""
+          } >> "$HISTORY_FILE"
+
+          # Ensure Patch Index exists in MASTER then append
+          if ! grep -qE '^## Patch Index' "$MASTER_FILE"; then
+            echo "" >> "$MASTER_FILE"
+            echo "## Patch Index" >> "$MASTER_FILE"
+            echo "" >> "$MASTER_FILE"
+          fi
+          echo "- Patch ${n}: ${title} (\`${patch_path}\`)" >> "$MASTER_FILE"
+
+          echo "$patch_path" > .patch_created
           BASH
 
           chmod +x tools/futility_patch.sh
@@ -78,25 +136,29 @@ jobs:
 
       - name: Create branch
         run: |
-          branch="patch/$(date +%Y%m%d%H%M%S)"
+          set -e
+          branch="patch/$(date +%Y%m%d%H%M%S)-$(cat .patch_created | sed 's#patches/##' | sed 's#.md##')"
           git checkout -b "$branch"
           echo "BRANCH=$branch" >> $GITHUB_ENV
 
-      - name: Commit
+      - name: Commit & push
         run: |
+          set -e
           git config user.name "futility-bot"
-          git config user.email "futility@users.noreply.github.com"
-
+          git config user.email "futility-bot@users.noreply.github.com"
           git add -A
           git commit -m "patch: ${{ inputs.title }}"
           git push -u origin "$BRANCH"
 
-      - name: Open PR
+      - name: Open PR (explicit)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
+          echo "Creating PR from $BRANCH -> main"
           gh pr create \
             --base main \
             --head "$BRANCH" \
             --title "Patch: ${{ inputs.title }}" \
-            --body "Automated patch"
+            --body "Automated patch creation. Scope: ${{ inputs.scope }}. Master: ${{ inputs.master_file }}" \
+          || echo "PR may already exist — continuing."
