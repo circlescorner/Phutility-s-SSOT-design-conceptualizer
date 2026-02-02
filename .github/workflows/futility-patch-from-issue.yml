@@ -1,0 +1,123 @@
+name: Futility Patch From Issue
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  patch:
+    if: contains(github.event.issue.labels.*.name, 'futility-patch')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure structure
+        run: |
+          set -e
+          mkdir -p patches tools
+          [ -f MASTER.md ] || (echo "# FUTILITY’S — MASTER" > MASTER.md && echo "" >> MASTER.md && echo "<!-- FUTILITY_PATCH_ANCHOR -->" >> MASTER.md && echo "" >> MASTER.md)
+          [ -f HISTORY.md ] || (echo "# History" > HISTORY.md && echo "" >> HISTORY.md)
+
+      - name: Create patch + apply to MASTER at anchor
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          set -euo pipefail
+
+          title="$ISSUE_TITLE"
+          # strip leading "Patch:" if user keeps it
+          title="${title#Patch: }"
+          title="${title#patch: }"
+
+          slug="$(echo "$title" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g')"
+          date="$(date +%Y-%m-%d)"
+
+          # compute next patch number safely
+          max=0
+          shopt -s nullglob
+          for f in patches/[0-9][0-9][0-9]-*.md; do
+            base="${f##*/}"
+            num="${base%%-*}"
+            [[ "$num" =~ ^[0-9]{3}$ ]] && ((10#$num > max)) && max=$((10#$num))
+          done
+          shopt -u nullglob
+          n=$(printf "%03d" $((max+1)))
+
+          patch_path="patches/${n}-${slug}.md"
+
+          cat > "$patch_path" <<EOF
+          # Patch ${n} — ${title}
+
+          Date: ${date}
+          Source: Issue #${{ github.event.issue.number }}
+
+          ## Raw Intake (Issue Body)
+          ${ISSUE_BODY}
+          EOF
+
+          # history entry
+          {
+            echo "## ${date} — Patch ${n}: ${title}"
+            echo "- Source: Issue #${{ github.event.issue.number }}"
+            echo "- Patch file: \`${patch_path}\`"
+            echo ""
+          } >> HISTORY.md
+
+          # build the block we insert into MASTER at the anchor
+          cat > .insert_block <<EOF
+          \n---\n### Patch ${n} — ${title} (${date})\n\n> Source: Issue #${{ github.event.issue.number }}\n\n${ISSUE_BODY}\n
+          EOF
+
+          # ensure anchor exists
+          grep -q "<!-- FUTILITY_PATCH_ANCHOR -->" MASTER.md || { echo "Missing anchor in MASTER.md: <!-- FUTILITY_PATCH_ANCHOR -->" >&2; exit 2; }
+
+          # insert block immediately AFTER the anchor (no scrolling required)
+          awk '
+            { print }
+            /<!-- FUTILITY_PATCH_ANCHOR -->/ {
+              while ((getline line < ".insert_block") > 0) print line
+              close(".insert_block")
+            }
+          ' MASTER.md > MASTER.md.tmp
+          mv MASTER.md.tmp MASTER.md
+
+          # write outputs for later steps
+          echo "$patch_path" > .patch_created
+          echo "$n" > .patch_num
+          echo "$title" > .patch_title
+
+      - name: Create branch
+        run: |
+          set -e
+          num="$(cat .patch_num)"
+          slug="$(cat .patch_created | sed 's#patches/##' | sed 's#.md##')"
+          branch="patch/${num}-${slug}"
+          git checkout -b "$branch"
+          echo "BRANCH=$branch" >> $GITHUB_ENV
+
+      - name: Commit & push
+        run: |
+          set -e
+          git config user.name "futility-bot"
+          git config user.email "futility-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "patch: $(cat .patch_title)"
+          git push -u origin "$BRANCH"
+
+      - name: Open PR + comment back on issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          title="$(cat .patch_title)"
+          num="$(cat .patch_num)"
+          pr_url="$(gh pr create --base main --head "$BRANCH" --title "Patch ${num}: ${title}" --body "Auto-generated from Issue #${{ github.event.issue.number }}." )"
+          gh issue comment ${{ github.event.issue.number }} --body "✅ PR created: ${pr_url}\n\nMerge it to apply Patch ${num}."
