@@ -1,0 +1,59 @@
+FUTILITY’S — SYSTEM HANDOFF SUMMARY
+
+This repository defines Futility’s: a self-hosted, rollbackable system for
+capturing messy human input, rigorously evaluating it, and publishing only
+what survives contradiction, citation, and governance as Single Source of Truth (SSOT).
+
+At its core:
+
+- Conversation is NOT truth.
+- Capture is NOT clean.
+- Truth is COMPILED.
+- SSOT is sacred.
+- Rollback is mandatory.
+
+Mechanics interact with a single chat interface, 24/7, without restriction.
+They speak naturally. The system listens in two ways:
+1) conversational helpfulness (explicitly untrusted)
+2) structured capture (verbatim, unverified)
+
+Behind the scenes, captured information flows through a back-office pipeline:
+- ingestion
+- parallel evaluation
+- contradiction detection
+- citation building
+- compilation into proposed truth
+
+Proposed truth is visible, reviewable, and voteable, but never authoritative by default.
+SSOT publication occurs only through explicit gates:
+- human approval
+- manager approval
+- or trusted mechanic quorum
+Always with a PR, provenance, and audit trail.
+
+The system escalates reasoning carefully:
+- first using internal logic and models
+- then internal burst compute (ephemeral workers)
+- and only as a last resort using external paid models
+Budgets apply ONLY to this final external escalation, never to mechanics.
+
+SSOT outputs are published in multiple forms:
+- a full HTML reference
+- a curated Obsidian manual for mobile, quick use
+- and a derived “book” authored entirely from SSOT
+
+Governance is layered:
+- Coach keeps direction and coherence
+- Philosopher protects theory and intent
+- Red Team challenges assumptions
+- Auditor protects the sacred nature of SSOT
+- Architect designs changes
+- Code Manager executes, deploys, and rolls back
+
+All changes flow through PRs.
+All decisions are logged in human-readable English.
+Nothing important happens silently.
+
+This system exists to survive time, repetition, pressure, cost constraints,
+and human imperfection—while still producing truth that can be trusted,
+explained, and rolled back when wrong.
