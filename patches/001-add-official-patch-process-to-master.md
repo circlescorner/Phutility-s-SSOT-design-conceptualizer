@@ -1,0 +1,80 @@
+# Patch 001 — Add official patch process to MASTER
+
+Date: 2026-02-02
+Source: Issue #2
+
+## Raw Intake (Issue Body)
+## Scope
+doctrine
+
+## Paste Block (what you want added/changed)
+
+GOAL
+Establish the official, canonical patch workflow for maintaining SSOT.
+
+This patch documents how all future changes to MASTER must be proposed,
+reviewed, audited, and merged using the automated patch system.
+
+---
+
+RATIONALE
+
+Right now, ideas and refinements are scattered across multiple markdown files
+and conversations. This causes drift, duplication, and ambiguity.
+
+We are formalizing:
+
+- No direct edits to MASTER
+- All changes originate from Issues
+- All changes are compiled via patches
+- All changes are reviewable and reversible
+
+This preserves long-term integrity.
+
+---
+
+PROCESS
+
+1) All proposed changes begin as GitHub Issues.
+
+2) Issues intended to modify SSOT must begin with:
+
+   "Patch: <short description>"
+
+3) The Issue body becomes raw intake.
+
+4) Automation compiles intake into:
+
+   - /patches/NNN-*.md
+   - HISTORY.md
+   - Inserted section in MASTER.md
+
+5) A Pull Request is generated automatically.
+
+6) Human review is required.
+
+7) Only merged PRs affect SSOT.
+
+---
+
+RULES
+
+- MASTER.md is never edited directly.
+- Patches are append-only.
+- HISTORY.md is immutable.
+- Rollbacks are performed via revert commits.
+- Conflicts are resolved via new patches, not rewrites.
+
+---
+
+STATUS
+
+This patch establishes the baseline governance model.
+All future governance changes must themselves be introduced via patches.
+
+## Why (optional)
+WHY HERE
+
+## Deprecates / Replaces (optional)
+WHAT THIS OVERRIDES
+
