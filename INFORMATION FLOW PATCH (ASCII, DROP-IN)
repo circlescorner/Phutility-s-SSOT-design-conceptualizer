@@ -1,0 +1,204 @@
+========================================================
+PATCH: INFORMATION FLOW + GOVERNANCE CORRECTIONS
+Applies to:
+- MASTER FRAMEWORK / SKELETON SPEC
+- MASTER SYSTEM INFRASTRUCTURE SPEC
+- SSOT CONVERSATIONAL SYSTEM (v0.1 conceptual)
+========================================================
+
+PATCH 1 — BUDGET CLARIFICATION (CRITICAL)
+----------------------------------------
+- Mechanics are NEVER limited, throttled, or budgeted.
+- Mechanics may interact with the system 24/7 without restriction.
+- ALL budget constraints apply ONLY to system-initiated external compute
+  (paid / large-model / GPU / API calls).
+
+Internal system operations are NOT budgeted:
+- chat intake
+- capture
+- ingestion
+- evaluation
+- contradiction detection
+- citation
+- compilation
+- internal CPU workers
+- internal model usage
+
+Budget exists solely to:
+- prevent unnecessary external escalation
+- control cost leakage
+- force internal reasoning first
+
+Replace any language implying “user budget” with:
+  “external escalation budget only.”
+
+--------------------------------------------------------
+
+PATCH 2 — MULTI-TIER ESCALATION (REPLACES SIMPLE ESCALATION)
+------------------------------------------------------------
+Escalation is now explicitly tiered.
+
+Tier 0 — Frontdesk (always-on)
+- classification
+- retrieval
+- simple synthesis
+- no deep reasoning
+
+Tier 1 — Internal reasoning (always allowed)
+- evaluator swarm (2–4)
+- contradiction hunter
+- citation maker
+- compiler pre-checks
+- local models only
+
+Tier 2 — Internal burst escalation (NEW)
+- system may spin up up to N (e.g., 8) ephemeral CPU worker VMs
+- workers perform:
+  - parallel analysis
+  - hypothesis voting
+  - enrichment of context
+- goal: attempt resolution WITHOUT external paid models
+
+Tier 3 — External escalation (budgeted)
+- paid / GPU / API models
+- receives:
+  - Case File
+  - Tier 1 outputs
+  - Tier 2 findings
+  - contradictions
+  - uncertainty summary
+- budget + consent gates apply here ONLY
+
+--------------------------------------------------------
+
+PATCH 3 — ASSET RESOLUTION (NEW REQUIRED BOT)
+---------------------------------------------
+Add a mandatory pre-pipeline step:
+
+Asset Resolver Bot:
+- normalizes messy mechanic references
+- resolves aliases, nicknames, locations
+- links to canonical asset IDs
+- runs BEFORE Case File assembly
+
+This bot:
+- does NOT assert truth
+- does NOT evaluate claims
+- improves context quality
+
+--------------------------------------------------------
+
+PATCH 4 — MECHANIC VOTING MODEL (REVISED)
+-----------------------------------------
+Replace categorical voting with confidence scale.
+
+Mechanic vote scale (1–5):
+1 = Absolutely wrong
+2 = Looks wrong
+3 = Unsure / maybe
+4 = Seems right
+5 = Absolutely correct
+
+Rules:
+- mechanics may vote multiple times over time
+- mechanics may revise votes later
+- no penalty for being wrong
+- votes are additive signal only
+
+Votes influence:
+- confidence
+- review priority
+- promotion eligibility
+
+Votes never directly edit SSOT.
+
+--------------------------------------------------------
+
+PATCH 5 — AUTHORING LAYERS (EXPANDED)
+------------------------------------
+The “Author” role is now a family of SSOT-only derivation bots.
+
+All authors:
+- read ONLY SSOT
+- never invent facts
+- produce derived, human-readable material
+
+Author personas:
+1) Technical Manual Author
+   - procedural, step-by-step documentation
+
+2) Senior Operator Narrator
+   - practical “how we actually run this”
+   - captures operational wisdom grounded in SSOT
+
+3) Data Watchdog / News Interpreter
+   - flags anomalies
+   - highlights misalignment (ops vs metrics vs management)
+   - produces insight bulletins
+
+4) Educator / Scientist
+   - training material
+   - theory of operation
+   - college-level explanations
+   - “fun fact of the day” allowed (SSOT-backed)
+
+--------------------------------------------------------
+
+PATCH 6 — OBISIDIAN OUTPUT (DUAL TRACK)
+--------------------------------------
+SSOT is published in two curated forms:
+
+Track A — Full Desktop HTML
+- exhaustive
+- deeply linked
+- complete reference
+
+Track B — Curated Obsidian SSOT
+- mobile-first
+- concise
+- polished narrative flow
+- short attention span friendly
+- selection and structure decided by Author
+
+Obsidian is NOT a raw dump.
+It is a curated manual.
+
+--------------------------------------------------------
+
+PATCH 7 — SSOT AUDITOR (NEW GOVERNANCE ROLE)
+--------------------------------------------
+Add a dedicated SSOT Auditor.
+
+SSOT Auditor:
+- monitors SSOT PRs and promotion events
+- watches for drift, shortcuts, unjustified certainty
+- enforces “compiled truth only” discipline
+
+Auditor powers:
+- flag
+- block
+- require explicit human override
+
+Auditor cannot approve changes.
+
+--------------------------------------------------------
+
+PATCH 8 — GOVERNANCE VISIBILITY + MAINTAINER OVERRIDE
+-----------------------------------------------------
+All non-conversational decisions MUST produce
+human-readable English logs:
+- escalation decisions
+- promotion events
+- approvals/rejections
+- budget blocks
+- overrides
+
+Maintainer privileges:
+- default: talk to Coach only
+- override: may directly consult Philosopher or Architect
+  (advisory, logged, non-executing)
+- all execution still flows through PRs
+
+========================================================
+END PATCH
+========================================================
