@@ -144,12 +144,15 @@ jobs:
           git commit -m "patch: ${{ inputs.title }}"
           git push --set-upstream origin "$BRANCH"
 
-      - name: Open PR
-        uses: peter-evans/create-pull-request@v6
-        with:
-          branch: ${{ env.BRANCH }}
-          title: "Patch: ${{ inputs.title }}"
-          body: |
-            Automated patch creation.
-            Scope: `${{ inputs.scope }}`
-            Master: `${{ inputs.master_file }}`
+          - name: Open PR (gh)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          echo "Creating PR from $BRANCH -> main"
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "Patch: ${{ inputs.title }}" \
+            --body "Automated patch creation. Scope: ${{ inputs.scope }}. Master: ${{ inputs.master_file }}" \
+          || echo "PR may already exist — continuing."
