@@ -1,0 +1,130 @@
+# FUTILITY’S — CANONICAL MASTER (SSOT-First System)
+Version: v1.0-canon
+Status: canonical baseline (patch-only evolution)
+Owner: Madison
+Last updated: 2026-02-02
+
+> Purpose: Futility’s exists to convert messy conversational input into audited, rollbackable truth.
+> Truth is compiled. Conversation is not truth.
+
+---
+
+## 0) Prime Directives (Non-Negotiable)
+D0.1 **SSOT is sacred.** Authoritative SSOT is never edited/published without a gated promotion process.
+D0.2 **Conversation is untrusted.** Any conversational output is untrusted unless explicitly SSOT-backed.
+D0.3 **Truth is compiled.** Models may propose, score, contradict, and cite — but do not author SSOT.
+D0.4 **Change control is mandatory.** No live-impacting change without PR + audit trail.
+D0.5 **Everything is reproducible.** Inputs, model versions, configs, outputs, and approvals are logged.
+D0.6 **Rollback is first-class.** If it can’t be rolled back, it can’t be trusted.
+
+---
+
+## 1) What “Truth” Means Here
+- **SSOT** = the only trusted output.
+- **Proposed** = machine-generated overlays and drafts with confidence + “why,” not trusted.
+- **Capture** = raw intake artifacts; evidence of thinking, not truth.
+
+The system must always make the trust boundary visible.
+
+---
+
+## 2) User Experience Contract (Grumpy-Mechanic Safe)
+Users talk to **one chat interface**.
+
+Each response has two internal outputs:
+1) **Helpfulness (Untrusted):** may explain, advise, hypothesize — must label uncertainty.
+2) **Capture (Unverified):** structured logs (CAP, CAND-CLAIM, Q, TASK), preserving raw language.
+
+### Question Asking Rule (Strict)
+Only ask clarifying questions if ALL are true:
+- Human-observable now
+- Decision-changing
+- Low effort  
+Budget: max 1–2 questions per exchange; max one follow-up round. If uncertain → infer explicitly or escalate.
+
+---
+
+## 3) System Shape (High Level)
+Futility’s has:
+- **Front Desk** (single chat interface)
+- **Back Office** (truth pipeline)
+- **Governance + Ops** (PR/deploy/rollback/audit)
+
+Users do not wait for the pipeline; pipeline runs asynchronously.
+
+---
+
+## 4) Truth Pipeline (Back Office)
+Pipeline stages:
+1) **Capture → Ingest** (normalize into DB schema)
+2) **Evaluate** (2–4 parallel evaluators with different lenses)
+3) **Contradiction Hunt** (detect conflicts; never silently resolve)
+4) **Citations** (build “why” chains claim→source)
+5) **Compiler (Sacred)**  
+   - Produces **Proposed outputs** + a **candidate SSOT patch** (PR-gated)
+   - Never guesses; refuses without adequate evidence
+6) **Author** (SSOT-only manual/book output derived from SSOT)
+
+---
+
+## 5) Escalation Policy (Compute)
+Two tiers:
+- **Light model always-on:** classification, retrieval, basic answers, capture formatting.
+- **Heavy compute on-demand:** only for hard questions; receives a structured Case File (not raw chat).
+
+Escalation must be gated by budgets and (when necessary) explicit consent/manager override.
+
+---
+
+## 6) Source of Recovery (Git + Rollback)
+Canonical repos:
+- **infra.git** — platform stack, policies, deploy/rollback scripts, service stubs
+- **ssot.git** — authoritative SSOT content only (approved truth)
+- **proposed.git** — proposed overlays + reports (non-authoritative)
+- **book.git** — SSOT-only manual/wiki output
+
+Rollback model:
+- known-good tags
+- tag-driven deploy
+- one-step revert to last known-good
+- DB backup/restore procedure exists and is tested
+
+---
+
+## 7) Hosting + Network Baseline
+Baseline components:
+- **Always-on baseline VM:** reverse proxy, web app, orchestrator/queue, bot services, logging/audit
+- **Database:** PostgreSQL + pgvector, reachable only via private network
+- **Admin access:** private plane only (Tailscale-only)
+- **Workers:** optional ephemeral CPU nodes joining private plane
+- **GPU provider:** optional on-demand escalation only (never required to run baseline)
+
+---
+
+## 8) Access Control (No Names Required)
+- Mechanics authenticate via **individual weekly codes** (for chat, proposed viewing, voting, throttles).
+- Managers have a separate **PIN** (approvals, ceiling overrides, dashboards).
+- Admin actions require strong auth on the private plane; all overrides are explicitly logged.
+
+---
+
+## 9) Change Control (Patch-Only Doctrine)
+This MASTER evolves only via:
+- a numbered patch note in `/patches/`
+- a PR referencing that patch
+- a tagged release for known-good rollback points
+
+Rule of thumb:
+- MASTER is the constitution (small + stable).
+- Patches carry the story: what changed, why, what it replaced.
+
+---
+
+## 10) Status of This Canon
+This canon intentionally omits:
+- exact tech choices for model runtimes (vLLM/TGI/llama.cpp)
+- exact UI design
+- exact DB schema
+- exact deployment scripts
+
+Those are implemented and refined through patches without changing the Prime Directives.
