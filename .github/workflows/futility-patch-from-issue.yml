@@ -1,3 +1,5 @@
+name: Futility Patch From Issue
+
 on:
   issues:
     types: [opened, edited]
@@ -9,7 +11,10 @@ permissions:
 
 jobs:
   patch:
-    if: contains(github.event.issue.labels.*.name, 'futility-patch')
+    # RUN if:
+    # - issue title starts with "Patch:" OR
+    # - issue has label "futility-patch"
+    if: startsWith(github.event.issue.title, 'Patch:') || contains(github.event.issue.labels.*.name, 'futility-patch')
     runs-on: ubuntu-latest
 
     steps:
@@ -20,25 +25,32 @@ jobs:
         run: |
           set -e
           mkdir -p patches tools
-          [ -f MASTER.md ] || (echo "# FUTILITY’S — MASTER" > MASTER.md && echo "" >> MASTER.md && echo "<!-- FUTILITY_PATCH_ANCHOR -->" >> MASTER.md && echo "" >> MASTER.md)
-          [ -f HISTORY.md ] || (echo "# History" > HISTORY.md && echo "" >> HISTORY.md)
+          if [ ! -f MASTER.md ]; then
+            echo "# FUTILITY’S — MASTER" > MASTER.md
+            echo "" >> MASTER.md
+            echo "<!-- FUTILITY_PATCH_ANCHOR -->" >> MASTER.md
+            echo "" >> MASTER.md
+          fi
+          if [ ! -f HISTORY.md ]; then
+            echo "# History" > HISTORY.md
+            echo "" >> HISTORY.md
+          fi
 
       - name: Create patch + apply to MASTER at anchor
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUM: ${{ github.event.issue.number }}
         run: |
           set -euo pipefail
 
           title="$ISSUE_TITLE"
-          # strip leading "Patch:" if user keeps it
           title="${title#Patch: }"
           title="${title#patch: }"
 
           slug="$(echo "$title" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g')"
           date="$(date +%Y-%m-%d)"
 
-          # compute next patch number safely
           max=0
           shopt -s nullglob
           for f in patches/[0-9][0-9][0-9]-*.md; do
@@ -55,29 +67,32 @@ jobs:
           # Patch ${n} — ${title}
 
           Date: ${date}
-          Source: Issue #${{ github.event.issue.number }}
+          Source: Issue #${ISSUE_NUM}
 
           ## Raw Intake (Issue Body)
           ${ISSUE_BODY}
           EOF
 
-          # history entry
           {
             echo "## ${date} — Patch ${n}: ${title}"
-            echo "- Source: Issue #${{ github.event.issue.number }}"
+            echo "- Source: Issue #${ISSUE_NUM}"
             echo "- Patch file: \`${patch_path}\`"
             echo ""
           } >> HISTORY.md
 
-          # build the block we insert into MASTER at the anchor
+          grep -q "<!-- FUTILITY_PATCH_ANCHOR -->" MASTER.md || { echo "Missing anchor in MASTER.md"; exit 2; }
+
           cat > .insert_block <<EOF
-          \n---\n### Patch ${n} — ${title} (${date})\n\n> Source: Issue #${{ github.event.issue.number }}\n\n${ISSUE_BODY}\n
+
+          ---
+          ### Patch ${n} — ${title} (${date})
+
+          > Source: Issue #${ISSUE_NUM}
+
+          ${ISSUE_BODY}
+
           EOF
 
-          # ensure anchor exists
-          grep -q "<!-- FUTILITY_PATCH_ANCHOR -->" MASTER.md || { echo "Missing anchor in MASTER.md: <!-- FUTILITY_PATCH_ANCHOR -->" >&2; exit 2; }
-
-          # insert block immediately AFTER the anchor (no scrolling required)
           awk '
             { print }
             /<!-- FUTILITY_PATCH_ANCHOR -->/ {
@@ -87,7 +102,6 @@ jobs:
           ' MASTER.md > MASTER.md.tmp
           mv MASTER.md.tmp MASTER.md
 
-          # write outputs for later steps
           echo "$patch_path" > .patch_created
           echo "$n" > .patch_num
           echo "$title" > .patch_title
