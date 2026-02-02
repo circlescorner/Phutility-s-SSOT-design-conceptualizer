@@ -123,17 +123,21 @@ jobs:
         run: |
           tools/futility_patch.sh "${{ inputs.title }}" "${{ inputs.scope }}"
 
-      - name: Create branch + commit
+      -      - name: Create branch
         run: |
           set -e
           branch="patch/$(date +%Y%m%d)-$(cat .patch_created | sed 's#patches/##' | sed 's#.md##')"
           git checkout -b "$branch"
+          echo "BRANCH=$branch" >> $GITHUB_ENV
+
+      - name: Commit changes
+        run: |
+          set -e
           git config user.name "futility-bot"
           git config user.email "futility-bot@users.noreply.github.com"
           git add -A
           git commit -m "patch: ${{ inputs.title }}"
-          git push --set-upstream origin "$branch"
-          echo "BRANCH=$branch" >> $GITHUB_ENV
+          git push --set-upstream origin "$BRANCH"
 
       - name: Open PR
         uses: peter-evans/create-pull-request@v6
