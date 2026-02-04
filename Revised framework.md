@@ -1,49 +1,4 @@
-  
 
-
-
-  
-
-  
-
-What changed from your prior “FROZEN” master framework spec:
-
-  
-
-1. Removed “frozen” language  
-    
-
-- Spec is now a living “baseline doctrine” that can evolve via PRs.
-
-3.   
-    
-4. DB placement clarified + updated  
-    
-
-- Updated wording: “Database is self-hosted within the baseline stack (may be separate VM).”
-- Baseline default now assumes DB runs on an external VM (still self-hosted).
-
-6.   
-    
-7. Tailscale tightened  
-    
-
-- Admin access is Tailscale-only (no public admin fallback).
-- DB is reachable only over Tailscale from baseline + admin.
-
-9.   
-    
-10. Infra spec merged into the master spec  
-    
-
-- The platform structure (domain, reverse proxy, repos, deploy model, workers, budgets) is now first-class inside the same master spec so there’s no “dual SSOT.”
-
-12.   
-    
-
-  
-
-  
 
   
 
@@ -347,7 +302,7 @@ Reverse proxy + TLS:
 
 Public routes (all require mechanic weekly code login at minimum):
 
-  /            → SSOT site (read-only)
+  /            → SSOT HTML site (read-only)
 
   /book        → SSOT Book/manual site (read-only)
 
@@ -379,7 +334,7 @@ Definition:
 
 - “Self-hosted within the baseline stack” means: Futility’s controls the DB on a VM you control.
 
-- DB may be on the baseline VM or (recommended) a separate DB VM.
+- DB may be on the baseline VM to start, full scale requires a separate DB VM.
 
   
 
