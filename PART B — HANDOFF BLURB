@@ -11,11 +11,15 @@ At its core:
 - Truth is COMPILED.
 - SSOT is sacred.
 - Rollback is mandatory.
+- Human friendly details about the source of information can be equally as valuable as the information. Source information always accompanies information
 
 Mechanics interact with a single chat interface, 24/7, without restriction.
 They speak naturally. The system listens in two ways:
 1) conversational helpfulness (explicitly untrusted)
 2) structured capture (verbatim, unverified)
+The system speaks in 2 ways
+1) general chat/helpfulness/problem solving
+2) learner that seeks to understand our plan assets and systems entirely and is allowed to directly ask for data which is reasonably expected to improve handling of likely real worl issues (toggled on/off by user, this will gate when the system is allowed to "data seek"
 
 Behind the scenes, captured information flows through a back-office pipeline:
 - ingestion
@@ -26,8 +30,8 @@ Behind the scenes, captured information flows through a back-office pipeline:
 
 Proposed truth is visible, reviewable, and voteable, but never authoritative by default.
 SSOT publication occurs only through explicit gates:
-- human approval
-- manager approval
+- Supervisor approval (required for anything flagged "unsafe" or "SOP concerms")
+- manager approval (required when flagged "emenant risk to human life" or "critial component at risk")
 - or trusted mechanic quorum
 Always with a PR, provenance, and audit trail.
 
@@ -35,12 +39,14 @@ The system escalates reasoning carefully:
 - first using internal logic and models
 - then internal burst compute (ephemeral workers)
 - and only as a last resort using external paid models
-Budgets apply ONLY to this final external escalation, never to mechanics.
+Budgets apply ONLY to this final external escalation, never targeted at limiting a mechanics usage
 
 SSOT outputs are published in multiple forms:
-- a full HTML reference
+- a full HTML reference page where all "truth" is kept in complete long form. User man also access/queue database pull for any claims/decisions/chain of events for any "sources" associated to SSOT "truths"
+(note this html is expected to get extremely large and expansive and will require dedicated curating/organization/restructing for the first several years as we continue to add all of our factories data. 
+(expect Over 1000 custom engineerd machines with various subsystems, plus 1000s of proceedures/manuals/references with various maintenance activies/event 24/7. This huge website needs to be organized and maintained by an ai bot)
 - a curated Obsidian manual for mobile, quick use
-- and a derived “book” authored entirely from SSOT
+- a more expansive "grad level" SSOT derived “book” authored entirely from SSOT
 
 Governance is layered:
 - Coach keeps direction and coherence
