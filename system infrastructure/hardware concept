@@ -1,5 +1,5 @@
-# FUTILITY’S — MASTER SYSTEM INFRASTRUCTURE SPEC (FROZEN SKELETON)
-Version: v0.1-frozen
+INFRASTRUCTURE SPEC ( SKELETON)
+Version: v0.1
 Scope: DigitalOcean + GitHub + Tailscale + Reverse Proxy + DB + Workers (NO Proxmox)
 Goal: A rollbackable, always-available baseline platform where Futility’s bots have a “home” and
 the full capture→propose→approve→publish workflow can run and evolve safely via PRs.
@@ -35,10 +35,10 @@ GitHub (Source of Recovery)
 ========================================================
 2) DEPLOYMENT TOPOLOGIES (INDECISION IS EXPLICIT)
 ========================================================
-This skeleton supports multiple baseline layouts. Choose one at any time; migration paths are built in.
+This skeleton supports multiple baseline layouts. 
 
 TOPOLOGY A (Simplest — single baseline VM)
-  - 1 always-on VM hosts: reverse proxy + web app + queue + bot services + Postgres/pgvector + lightweight model
+  - 1 always-on VM hosts: reverse proxy + web app + queue + orchestrator
   - Pros: lowest complexity, fastest to bootstrap
   - Cons: DB shares resources; heavy jobs can threaten baseline without strict limits
 
@@ -54,8 +54,8 @@ TOPOLOGY C (Baseline on cheaper provider + DO for burst)
   - Pros: lowers always-on bill while keeping burst flexibility
   - Cons: slightly more cross-provider networking consideration (solved via Tailscale)
 
-DEFAULT FOR THIS SPEC:
-- Implement TOPOLOGY A first (bootstrap + working skeleton).
+Current direction:
+- Implement TOPOLOGY A first (bootstrap + working skeleton). Test and prove baseload system is stable/repeatable/locked in. 
 - Design and document TOPOLOGY B as the near-term upgrade (DB separation).
 - Keep TOPOLOGY C as an allowed future relocation without changing architecture.
 
@@ -67,7 +67,7 @@ Host naming:
 - db-1               (optional, for topology B)
 - worker-ephemeral-* (created/destroyed per job)
 
-Filesystem layout (canonical on host; easiest from iPhone SSH):
+Filesystem layout (canonical on host)
 /opt/futilitys/
   infra/        (infra.git clone)
   ssot/         (ssot.git clone)
@@ -170,7 +170,7 @@ All bots must support ENABLE flags:
 - restore procedure documented and tested
 
 8.2 Capture archive
-- raw capture text archived after 90 days
+- raw capture text archived after 30 days
 - derived objects persist
 - archive bundles stored with hashes + manifest in /opt/futilitys/artifacts
 
@@ -215,7 +215,7 @@ All bots must support ENABLE flags:
 ========================================================
 Mechanics:
 - individual weekly code (no names)
-- used for: chat, proposed viewing, voting, rate limiting, trust scoring
+- used for: chat, proposed viewing, voting, trust scoring
 
 Managers:
 - manager PIN for dashboards + approvals + ceiling override
@@ -273,7 +273,7 @@ O14.2 DB location
 - upgrade path: DB on db-1 VM (Topology B) with Tailscale private connection
 
 O14.3 Repo serving model
-- default: host filesystem canonical (best for iPhone ops)
+- default: host filesystem canonical 
 - upgrade: container-owned volumes optional later
 
 These indecisions are not “unknowns” — they are supported choices with documented paths.
